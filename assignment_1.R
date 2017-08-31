@@ -45,7 +45,7 @@ plot(log10(class_lambda_table[1:15, 1]), class_lambda_table[1:15, 3], xlab = "lo
 plot(log10(class_lambda_table[1:15, 1]), class_lambda_table[1:15, 4], xlab = "logb 10 of lambda values", ylab = "no of sv's")
 
 
-################## KNN Model Problem  - Final Solution ####################
+################## KNN Model Problem  - Final Solution (a) ####################
 
 acc_against_k_fin <- data.frame(matrix(nrow = 20, ncol = 2, 0))
 colnames(acc_against_k_fin) <- c("k_value", "accuracy")
@@ -69,7 +69,7 @@ for(j in 1:20) {
 plot(acc_against_k_fin[1:20, 1], acc_against_k_fin[1:20, 2], xlim = c(1, 20), ylim = c(0.7, 0.9))
 
 
-################## KNN Model Problem  - Alternate solution ####################
+################## KNN Model Problem  - Alternate solution (c) ####################
 
 # unpack operator := for unpacking multiple outputs from a function
 ':=' <- function(lhs, rhs) {
