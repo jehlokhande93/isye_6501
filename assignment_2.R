@@ -4,6 +4,8 @@ setwd("E:/isye_6501/week_2_hw")
 library("kernlab")
 library("kknn")
 library("data.table")
+library("datasets")
+library("ggplot2")
 # general steps for solution 1
 
 data <- read.table("credit_card_data-headers.txt", header = TRUE)
@@ -135,3 +137,11 @@ svm_model_results <- function(rotation_train, rotation_val, random_train, random
 output_svm <- svm_model_results(rot_train, rot_val, rand_train, rand_val, k_value)
 output_svm_table <- data.table(output_svm)
 aggregated_svm_output <- output_svm_table[,list(mean_rotation_accuracy=mean(rotation_accuracy), mean_random_accuracy=mean(random_accuracy), sd_rotation_accuracy=sd(rotation_accuracy), sd_random_accuracy=sd(random_accuracy)),by=lambda_val]
+
+# solution 3 : k-means clustering algorithm on iris dataset
+ggplot(iris, aes(Petal.Length, Petal.Width, color = Species)) + geom_point()
+ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) + geom_point()
+set.seed(10)
+num_clusters = length(unique(iris$Species))
+kmeans_model <- kmeans(iris[, 3:4], num_clusters, nstart = 50)
+# look at the metric - betweenss, totalss and their ratio
