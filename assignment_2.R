@@ -93,7 +93,7 @@ output_knn <- knn_function_cross_validation(rot_train, rot_val, rand_train, rand
 output_knn_table <- data.table(output_knn)
 aggregated_knn_output <- output_knn_table[,list(mean_rotation_accuracy=mean(rotation_accuracy), mean_random_accuracy=mean(random_accuracy), sd_rotation_accuracy=sd(rotation_accuracy), sd_random_accuracy=sd(random_accuracy)),by=k_knn_value]
 
-# svm model
+# svm model complete implementation
 margin_svm <- function(a) {
   dist <- round(2 / sqrt(sum(a^2)), 3)
   return(dist)
