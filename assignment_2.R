@@ -134,4 +134,4 @@ svm_model_results <- function(rotation_train, rotation_val, random_train, random
 
 output_svm <- svm_model_results(rot_train, rot_val, rand_train, rand_val, k_value)
 output_svm_table <- data.table(output_svm)
-aggregated_svm_output <- output_svm_table[,list(mean_rotation_accuracy=mean(rotation_accuracy), mean_random_accuracy=mean(random_accuracy), sd_rotation_accuracy=sd(rotation_accuracy), sd_random_accuracy=sd(random_accuracy)),by=lambda]
+aggregated_svm_output <- output_svm_table[,list(mean_rotation_accuracy=mean(rotation_accuracy), mean_random_accuracy=mean(random_accuracy), sd_rotation_accuracy=sd(rotation_accuracy), sd_random_accuracy=sd(random_accuracy)),by=lambda_val]
