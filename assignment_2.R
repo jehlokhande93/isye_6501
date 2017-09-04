@@ -142,6 +142,27 @@ aggregated_svm_output <- output_svm_table[,list(mean_rotation_accuracy=mean(rota
 ggplot(iris, aes(Petal.Length, Petal.Width, color = Species)) + geom_point()
 ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) + geom_point()
 set.seed(10)
+kmeans_efficiency_table <- data.frame(matrix(nrow = 15, ncol = 5, 0))
+colnames(kmeans_efficiency_table) <- c("col_numbers_used", "total_distance", "distance_between_clusters",  "compactness_factor", "accuracy")
 num_clusters = length(unique(iris$Species))
-kmeans_model <- kmeans(iris[, 3:4], num_clusters, nstart = 50)
+num_vars <- ncol(iris) - 1
+sequence_def <- seq(1, num_vars)
+p <- 1
+for(i in 1:(ncol(iris) - 1)) {
+  temp <- data.frame(combn(sequence_def, i))
+  for(j in 1:choose(num_vars, i)) {
+    kmeans_model <- kmeans(iris[, c(temp[, j])], num_clusters, nstart = 20)
+    conf_matrix <- table(kmeans_model$cluster, iris$Species)
+    accuracy <- sum(max(conf_matrix[, 1]), max(conf_matrix[, 2]), max(conf_matrix[, 3]))/nrow(iris)
+    kmeans_efficiency_table[p, 1] <- as.character(paste(c(temp[, j]), collapse = ', '))
+    kmeans_efficiency_table[p, 2] <- kmeans_model$totss
+    kmeans_efficiency_table[p, 3] <- kmeans_model$betweenss
+    kmeans_efficiency_table[p, 4] <- kmeans_model$betweenss / kmeans_model$totss
+    kmeans_efficiency_table[p, 5] <- accuracy
+    p <- p + 1
+  }
+}
+kmeans_efficiency_table
+plot(accuracy ~ factor(col_numbers_used), kmeans_efficiency_table)
+
 # look at the metric - betweenss, totalss and their ratio
