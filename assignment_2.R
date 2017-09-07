@@ -15,21 +15,24 @@ data_mat <- as.matrix(data)
 k_value = 10
 
 # random sampling of data: using k-fold approach. this function returns k datasets randomly sampled from the parent data 
-random_sample_data_k_fold <- function(d, k) {
-  rand_data <- data
-  result <- list()
-  for(i in 1:(k)) {
-    rand_train_temp <- data[sample(1:nrow(rand_data), round((1/(k-i+2))*nrow(rand_data), 0), replace = FALSE), ]
-    name <- paste("rand_data_part", i, sep = "_") 
-    assign(name, rand_train_temp)
-    rows <- as.numeric(rownames(rand_train_temp))
-    rand_data <- rand_data[-rows, ]
-    result[[i]] <- rand_train_temp
-  }
-  result[[k+1]] <- rand_data
-  return(result)
-}
-list_random_sample <- random_sample_data_k_fold(data, k_value)
+# random_sample_data_k_fold <- function(d, k) {
+#   rand_data <- data
+#   result <- list()
+#   for(i in 1:(k)) {
+#     rand_train_temp <- data[sample(1:nrow(rand_data), round((1/(k-i+2))*nrow(rand_data), 0), replace = FALSE), ]
+#     name <- paste("rand_data_part", i, sep = "_") 
+#     assign(name, rand_train_temp)
+#     rows <- as.numeric(rownames(rand_train_temp))
+#     rand_data <- rand_data[-rows, ]
+#     result[[i]] <- rand_train_temp
+#   }
+#   result[[k+1]] <- rand_data
+#   return(result)
+# }
+
+# list_random_sample <- split(data, sample(1:nrow(data[1:49, ]), nrow(data[1:649, ])/(k_value+1), replace = TRUE))
+list_random_sample <- split(data[1:649, ], sample(rep(1:(k_value+1), (nrow(data[1:649, ])/ (k_value + 1)))))
+
 
 #rotation sampling of data - the ratio of training to testing set is 3:1
 rotation_sample_data_k_fold <- function(d, k) {
@@ -74,29 +77,14 @@ knn_function_cross_validation <- function(rotation_train, rotation_val, random_t
   p <- 1
   for(r in 1:max_k_value) {
     for(i in 1:k) {
-      sum_rotation = 0
-      sum_random = 0
       model_random <- kknn(formula = R1 ~. , random_train[[i]], random_val[[i]], k = r , scale = TRUE)
       model_rotation <- kknn(formula = R1 ~. , rotation_train[[i]], rotation_val[[i]], k = r , scale = TRUE)
       pred_random <- fitted(model_random)
       pred_rotation <- fitted(model_rotation)
-      for(t in 1:length(pred_random)) { 
-        if(abs(random_val[[i]][t, 11] - pred_random[t]) < 0.5) {
-          sum_random = sum_random + 1
-        }
-      }
-      rand_accuracy <- sum_random / nrow(random_val[[i]])
-      for(q in 1:length(pred_rotation)) { 
-        if(abs(rotation_val[[i]][q, 11] - pred_rotation[q]) < 0.5) {
-          sum_rotation = sum_rotation + 1
-        }
-      }
-      rotation_accuracy <- sum_rotation / nrow(rotation_val[[i]])
-      
-      #pred_rand_acc <- ifelse(pred_random > 0.5, 1, 0)
-      #rand_accuracy <- sum(pred_rand_acc == random_val[[i]][, 11]) / nrow(random_val[[i]])
-      #pred_rot_acc <- ifelse(pred_rotation > 0.5, 1, 0)
-      #rotation_accuracy <- sum(pred_rot_acc == rotation_val[[i]][, 11]) / nrow(rotation_val[[i]])
+      pred_rand_acc <- ifelse(pred_random > 0.5, 1, 0)
+      rand_accuracy <- sum(pred_rand_acc == random_val[[i]][, 11]) / nrow(random_val[[i]])
+      pred_rot_acc <- ifelse(pred_rotation > 0.5, 1, 0)
+      rotation_accuracy <- sum(pred_rot_acc == rotation_val[[i]][, 11]) / nrow(rotation_val[[i]])
       accuracy_knn_data_frame[p, 1] <- r
       accuracy_knn_data_frame[p, 2] <- i
       accuracy_knn_data_frame[p, 3] <- rotation_accuracy
