@@ -14,24 +14,25 @@ data_mat <- as.matrix(data)
 # ENTER THE K -Value HERE
 k_value = 10
 
-# random sampling of data: using k-fold approach. this function returns k datasets randomly sampled from the parent data 
-# random_sample_data_k_fold <- function(d, k) {
-#   rand_data <- data
-#   result <- list()
-#   for(i in 1:(k)) {
-#     rand_train_temp <- data[sample(1:nrow(rand_data), round((1/(k-i+2))*nrow(rand_data), 0), replace = FALSE), ]
-#     name <- paste("rand_data_part", i, sep = "_") 
-#     assign(name, rand_train_temp)
-#     rows <- as.numeric(rownames(rand_train_temp))
-#     rand_data <- rand_data[-rows, ]
-#     result[[i]] <- rand_train_temp
-#   }
-#   result[[k+1]] <- rand_data
-#   return(result)
-# }
+# random sampling of data: using k-fold approach. this function returns k datasets randomly sampled from the parent data
+random_sample_data_k_fold <- function(d, k) {
+  rand_data <- data
+  result <- list()
+  for(i in 1:(k)) {
+    rand_train_temp <- data[sample(1:nrow(rand_data), round((1/(k-i+2))*nrow(rand_data), 0), replace = FALSE), ]
+    name <- paste("rand_data_part", i, sep = "_")
+    assign(name, rand_train_temp)
+    rows <- as.numeric(rownames(rand_train_temp))
+    rand_data <- rand_data[-rows, ]
+    result[[i]] <- rand_train_temp
+  }
+  result[[k+1]] <- rand_data
+  return(result)
+}
 
+# these are just another ways of producing random data, but they might produce bias
 # list_random_sample <- split(data, sample(1:nrow(data[1:49, ]), nrow(data[1:649, ])/(k_value+1), replace = TRUE))
-list_random_sample <- split(data[1:649, ], sample(rep(1:(k_value+1), (nrow(data[1:649, ])/ (k_value + 1)))))
+# list_random_sample <- split(data[1:649, ], sample(rep(1:(k_value+1), (nrow(data[1:649, ])/ (k_value + 1)))))
 
 
 #rotation sampling of data - the ratio of training to testing set is 3:1
@@ -108,8 +109,8 @@ svm_model_results <- function(rotation_train, rotation_val, random_train, random
   p <- 1
   accuracy_svm_data_frame <- data.frame(matrix(nrow = 5*k , ncol = 6, 0))
   colnames(accuracy_svm_data_frame) <- c("lambda_val", "index_value", "rotation_accuracy", "random_accuracy", "rotation_margin", "random_margin")
-  for(r in 1:5) {
-    lambda = 10^(r - 1)
+  for(r in 1:11) {
+    lambda = 10^(r - 6)
     for(i in 1:k) {
       model_rand <- ksvm(as.matrix(random_train[[i]][, 1:10]), as.matrix(random_train[[i]][, 11]), type = "C-svc", kernel = "vanilladot", C = lambda, scaled = TRUE)
       model_rot <- ksvm(as.matrix(rotation_train[[i]][, 1:10]), as.matrix(rotation_train[[i]][, 11]), type = "C-svc", kernel = "vanilladot", C = lambda, scaled = TRUE)
@@ -151,7 +152,7 @@ num_clusters = length(unique(iris$Species))
 num_vars <- ncol(iris) - 1
 sequence_def <- seq(1, num_vars)
 p <- 1
-for(i in 1:sequence_def) {
+for(i in 1:max(sequence_def)) {
   temp <- data.frame(combn(sequence_def, i))
   for(j in 1:choose(num_vars, i)) {
     kmeans_model <- kmeans(iris[, c(temp[, j])], num_clusters, nstart = 20)
@@ -165,7 +166,10 @@ for(i in 1:sequence_def) {
     p <- p + 1
   }
 }
+# final plots and results for all the models
 kmeans_efficiency_table
+aggregated_knn_output
+aggregated_svm_output
 plot(accuracy ~ factor(col_numbers_used), kmeans_efficiency_table)
 
 # look at the metric - betweenss, totalss and their ratio
