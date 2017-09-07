@@ -172,8 +172,3 @@ aggregated_knn_output
 aggregated_svm_output
 plot(accuracy ~ factor(col_numbers_used), kmeans_efficiency_table)
 
-# look at the metric - betweenss, totalss and their ratio
-
-### questions for the assignment: 
-#1 do we need to work on k-cross valiadation for both svm and knn 
-#2 shall we use any value of k for this? 
