@@ -12,7 +12,7 @@ data <- read.table("credit_card_data-headers.txt", header = TRUE)
 data_mat <- as.matrix(data)
 # solution 1 -a : knn using k-fold cross validation
 # ENTER THE K -Value HERE
-k_value = 5
+k_value = 10
 
 # random sampling of data: using k-fold approach. this function returns k datasets randomly sampled from the parent data 
 random_sample_data_k_fold <- function(d, k) {
@@ -74,14 +74,29 @@ knn_function_cross_validation <- function(rotation_train, rotation_val, random_t
   p <- 1
   for(r in 1:max_k_value) {
     for(i in 1:k) {
+      sum_rotation = 0
+      sum_random = 0
       model_random <- kknn(formula = R1 ~. , random_train[[i]], random_val[[i]], k = r , scale = TRUE)
       model_rotation <- kknn(formula = R1 ~. , rotation_train[[i]], rotation_val[[i]], k = r , scale = TRUE)
       pred_random <- fitted(model_random)
       pred_rotation <- fitted(model_rotation)
-      pred_rand_acc <- ifelse(pred_random > 0.5, 1, 0)
-      rand_accuracy <- sum(pred_rand_acc == random_val[[i]][, 11]) / nrow(random_val[[i]])
-      pred_rot_acc <- ifelse(pred_rotation > 0.5, 1, 0)
-      rotation_accuracy <- sum(pred_rot_acc == rotation_val[[i]][, 11]) / nrow(rotation_val[[i]])
+      for(t in 1:length(pred_random)) { 
+        if(abs(random_val[[i]][t, 11] - pred_random[t]) < 0.5) {
+          sum_random = sum_random + 1
+        }
+      }
+      rand_accuracy <- sum_random / nrow(random_val[[i]])
+      for(q in 1:length(pred_rotation)) { 
+        if(abs(rotation_val[[i]][q, 11] - pred_rotation[q]) < 0.5) {
+          sum_rotation = sum_rotation + 1
+        }
+      }
+      rotation_accuracy <- sum_rotation / nrow(rotation_val[[i]])
+      
+      #pred_rand_acc <- ifelse(pred_random > 0.5, 1, 0)
+      #rand_accuracy <- sum(pred_rand_acc == random_val[[i]][, 11]) / nrow(random_val[[i]])
+      #pred_rot_acc <- ifelse(pred_rotation > 0.5, 1, 0)
+      #rotation_accuracy <- sum(pred_rot_acc == rotation_val[[i]][, 11]) / nrow(rotation_val[[i]])
       accuracy_knn_data_frame[p, 1] <- r
       accuracy_knn_data_frame[p, 2] <- i
       accuracy_knn_data_frame[p, 3] <- rotation_accuracy
@@ -91,7 +106,7 @@ knn_function_cross_validation <- function(rotation_train, rotation_val, random_t
   }
   return(accuracy_knn_data_frame)
 }
-output_knn <- knn_function_cross_validation(rot_train, rot_val, rand_train, rand_val, k_value, 20)
+output_knn <- knn_function_cross_validation(rot_train, rot_val, rand_train, rand_val, k_value, 40)
 output_knn_table <- data.table(output_knn)
 aggregated_knn_output <- output_knn_table[,list(mean_rotation_accuracy=mean(rotation_accuracy), mean_random_accuracy=mean(random_accuracy), sd_rotation_accuracy=sd(rotation_accuracy), sd_random_accuracy=sd(random_accuracy)),by=k_knn_value]
 
@@ -148,7 +163,7 @@ num_clusters = length(unique(iris$Species))
 num_vars <- ncol(iris) - 1
 sequence_def <- seq(1, num_vars)
 p <- 1
-for(i in 1:(ncol(iris) - 1)) {
+for(i in 1:sequence_def) {
   temp <- data.frame(combn(sequence_def, i))
   for(j in 1:choose(num_vars, i)) {
     kmeans_model <- kmeans(iris[, c(temp[, j])], num_clusters, nstart = 20)
@@ -166,3 +181,7 @@ kmeans_efficiency_table
 plot(accuracy ~ factor(col_numbers_used), kmeans_efficiency_table)
 
 # look at the metric - betweenss, totalss and their ratio
+
+### questions for the assignment: 
+#1 do we need to work on k-cross valiadation for both svm and knn 
+#2 shall we use any value of k for this? 
