@@ -1,5 +1,5 @@
 # assignment 2 
-setwd("E:/isye_6501/week_2_hw")
+
 #install.packages("data.table")
 library("kernlab")
 library("kknn")
@@ -13,6 +13,12 @@ data_mat <- as.matrix(data)
 # solution 1 -a : knn using k-fold cross validation
 # ENTER THE K -Value HERE
 k_value = 10
+
+S=sample(1:nrow(data),round(0.8*nrow(data),-1))
+
+train=data[S,]
+test=data[-S,]
+
 
 # random sampling of data: using k-fold approach. this function returns k datasets randomly sampled from the parent data
 random_sample_data_k_fold <- function(d, k) {
@@ -45,7 +51,8 @@ rotation_sample_data_k_fold <- function(d, k) {
   }
   return(result)
 }
-list_rotation_sample <- rotation_sample_data_k_fold(data, k_value)
+list_rotation_sample <- rotation_sample_data_k_fold(train, k_value)
+list_random_sample <-random_sample_data_k_fold(train, k_value)
 
 rand_val <- list()
 rand_train <- list()
@@ -99,6 +106,22 @@ output_knn <- knn_function_cross_validation(rot_train, rot_val, rand_train, rand
 output_knn_table <- data.table(output_knn)
 aggregated_knn_output <- output_knn_table[,list(mean_rotation_accuracy=mean(rotation_accuracy), mean_random_accuracy=mean(random_accuracy), sd_rotation_accuracy=sd(rotation_accuracy), sd_random_accuracy=sd(random_accuracy)),by=k_knn_value]
 
+
+#Testing on the test data after selecting the optimal value of K
+
+optimal_k=c(aggregated_knn_output[which.max(as.matrix(aggregated_knn_output[,2])),1])
+
+model_final=kknn(R1 ~. ,train=train,test=test,k=optimal_k[[1]])
+predicted_final=fitted(model_final)
+sum_final=0
+for(k in 1:nrow(data.frame(predicted_final))){
+  if (abs(test[k, 11] - predicted_final[k]) < 0.5) {
+    sum_final = sum_final + 1
+  }
+}
+accuracy_final=sum_final/nrow(test)
+
+
 # svm model complete implementation
 margin_svm <- function(a) {
   dist <- round(2 / sqrt(sum(a^2)), 3)
@@ -142,6 +165,14 @@ output_svm <- svm_model_results(rot_train, rot_val, rand_train, rand_val, k_valu
 output_svm_table <- data.table(output_svm)
 aggregated_svm_output <- output_svm_table[,list(mean_rotation_accuracy=mean(rotation_accuracy), mean_random_accuracy=mean(random_accuracy), sd_rotation_accuracy=sd(rotation_accuracy), sd_random_accuracy=sd(random_accuracy)),by=lambda_val]
 
+#Finding the optimal C and testing the test data
+
+optimal_c=c(aggregated_svm_output[which.max(as.matrix(aggregated_svm_output[,2])),1])
+model_final_svm <- ksvm(as.matrix(train[1:10]), as.matrix(train[,11]), type = "C-svc", kernel = "vanilladot", C = optimal_c, scaled = TRUE)
+prediction_final <- predict(model_final_svm, as.matrix(test[, 1:10]))
+accuracy_final_svm <- sum(prediction_final == test[, 11]) / nrow(test)
+
+
 # solution 3 : k-means clustering algorithm on iris dataset
 ggplot(iris, aes(Petal.Length, Petal.Width, color = Species)) + geom_point()
 ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) + geom_point()
@@ -172,3 +203,4 @@ aggregated_knn_output
 aggregated_svm_output
 plot(accuracy ~ factor(col_numbers_used), kmeans_efficiency_table)
 
+# look at the metric - betweenss, totalss and their ratio
